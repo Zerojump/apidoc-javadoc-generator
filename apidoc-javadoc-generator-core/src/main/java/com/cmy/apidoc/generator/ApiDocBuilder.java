@@ -740,6 +740,7 @@ public final class ApiDocBuilder {
 
                     int offset = 0;
                     int genericIndex = 0;//genericCodeList 的索引角标
+                    //如果循环不加 j < classListSize 条件，在泛型不加实参时会出现角标越界异常
                     for (int j = i + 1; j < classListSize && genericIndex < genericNum; j++) {
                         if (offset == 0) {
                             map.put(genericCodeList.get(genericIndex++), classList.get(j));
