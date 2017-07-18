@@ -1,5 +1,6 @@
 package com.cmy.apidoc.generator.material.controller;
 
+import com.cmy.apidoc.generator.annotations.ApiDesc;
 import com.cmy.apidoc.generator.annotations.ApiErrorDefine;
 import com.cmy.apidoc.generator.annotations.ApiParam;
 import com.cmy.apidoc.generator.material.commons.ResponseWrap;
@@ -35,8 +36,7 @@ import java.util.stream.Collectors;
 @ApiErrorDefine(clazz = ResponseWrap.class, methods = {"getParamError", "getAccountError"})
 public class SpringMvcAnnotationClass {
 
-    @RequestMapping(name = "read list", value = "read/{id}", method = RequestMethod.GET)
-    @ApiParam(name = "id", desc = "不知道什么id")
+    @RequestMapping(name = "不知道做什么啊", value = "read/{id}", method = RequestMethod.GET)
     public List<Integer> get(@ApiParam(name = "id", group = "mine", size = "0-", allowedValues = "1,2", defaultValue = "1", desc = "just send id", required = false)
                              @PathVariable Integer id,
                              @RequestBody PermissionVo permissionVo) {
@@ -75,7 +75,7 @@ public class SpringMvcAnnotationClass {
     }
 
     @RequestMapping(value = "generic", method = RequestMethod.GET)
-    @ApiParam(name = "generic", desc = "泛型处理好鬼烦")
+    @ApiDesc(value = "好烦", desc = "泛型处理好鬼烦")
     public A<F, C<E, D>, B> generic() {
         return null;
     }

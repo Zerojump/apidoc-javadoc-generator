@@ -1,5 +1,6 @@
 package com.cmy.apidoc.generator;
 
+import com.cmy.apidoc.generator.annotations.ApiDesc;
 import com.cmy.apidoc.generator.annotations.ApiErrorDefine;
 import com.cmy.apidoc.generator.annotations.ApiErrorFactoryMethod;
 import com.cmy.apidoc.generator.annotations.ApiParam;
@@ -38,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,6 +55,8 @@ import java.util.stream.Collectors;
 public final class ApiDocBuilder {
     private ApiDocBuilder() {
     }
+
+    private static Logger log = Logger.getLogger("ApiDocBuilder");
 
     private static final String JAVA_DOC_START = "/**";
     public static final String SPACE_ONE = " ";
@@ -273,7 +277,18 @@ public final class ApiDocBuilder {
         String reqUrl = reqPaths.length == 0 || StringUtils.isEmpty(reqPaths[0]) ? EMPTY : SLASH + reqPaths[0];
 
         //接口方法名称
+        ApiDesc apiDescAntt = method.getAnnotation(ApiDesc.class);
         String reqName = StringUtils.isEmpty(methodRMAntt.name()) ? method.getName() : methodRMAntt.name();
+        String apiName = reqName;
+        String apiDesc = reqName;
+        if (apiDescAntt != null) {
+            if (!apiDescAntt.value().isEmpty()) {
+                apiName = apiDescAntt.value();
+            }
+            if (!apiDescAntt.desc().isEmpty()) {
+                apiDesc = apiDescAntt.desc();
+            }
+        }
 
         StringBuilder apiSB = new StringBuilder();
         apiSB.append(NEW_LINE);
@@ -288,9 +303,12 @@ public final class ApiDocBuilder {
         //@apiVersion TODO version 处理
         apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_VERSION.getCode()).append(SPACE_ONE).append(VERSION).append(NEW_LINE);
         //@apiName
-        apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_NAME.getCode()).append(SPACE_ONE).append(reqName).append(NEW_LINE);
+        apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_NAME.getCode()).append(SPACE_ONE).append(apiName).append(NEW_LINE);
         //@apiGroup
         apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_GROUP.getCode()).append(SPACE_ONE).append(apiGroup).append(NEW_LINE);
+        //@apiDesc
+        apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_DESCRIPTION.getCode()).append(SPACE_ONE).append(apiDesc).append(NEW_LINE);
+
 
             /*
              * @api {post} /user/
@@ -721,7 +739,8 @@ public final class ApiDocBuilder {
                     Map<String, Class<?>> map = new HashMap<>(genericNum);
 
                     int offset = 0;
-                    for (int j = i + 1, genericIndex = 0; genericIndex < genericCodeList.size(); j++) {
+                    int genericIndex = 0;//genericCodeList 的索引角标
+                    for (int j = i + 1; j < classListSize && genericIndex < genericNum; j++) {
                         if (offset == 0) {
                             map.put(genericCodeList.get(genericIndex++), classList.get(j));
                         } else {
@@ -783,7 +802,7 @@ public final class ApiDocBuilder {
         try {
             classInstance = clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+            log.info("Can't create an instance of " + clazz.getCanonicalName() + " because it doesn't have the default constructor");
             return null;
         }
 

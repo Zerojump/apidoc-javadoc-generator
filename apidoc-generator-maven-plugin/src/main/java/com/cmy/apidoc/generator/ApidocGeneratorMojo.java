@@ -1,5 +1,6 @@
 package com.cmy.apidoc.generator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -33,7 +34,7 @@ import static com.cmy.apidoc.generator.ApiDocBuilder.writeFile;
 @Mojo(name = "generate")
 public class ApidocGeneratorMojo extends AbstractMojo {
 
-    Logger log = Logger.getLogger("ApidocGeneratorMojo");
+    private Logger log = Logger.getLogger("ApidocGeneratorMojo");
 
     public static final String PACKAGE = "package";
     public static final String SEMICOLON = ";";
@@ -64,6 +65,19 @@ public class ApidocGeneratorMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+
+        if (StringUtils.isEmpty(apiVersion)) {
+            log.info("apiVersion can't be empty");
+            throw new MojoExecutionException("apiVersion can't be empty");
+        }
+        if (StringUtils.isEmpty(apiDocFileName)) {
+            log.info("apiDocFileName can't be empty");
+            throw new MojoExecutionException("apiDocFileName can't be empty");
+        }
+        if (StringUtils.isEmpty(apiDocDir)) {
+            log.info("apiDocDir can't be empty");
+            throw new MojoExecutionException("apiDocDir can't be empty");
+        }
         
         ClassLoader parent = Thread.currentThread().getContextClassLoader();
         URL[] urls = new URL[1];
@@ -110,7 +124,6 @@ public class ApidocGeneratorMojo extends AbstractMojo {
 
         apiDocSB.append(BRACE_CLOSE);
         File dir = new File(apiDocDir, apiDocPackage.replaceAll("\\.", "/"));
-        log.info("dir.getAbsolutePath() = " + dir.getAbsolutePath());
 
         if (dir.isFile()) {
             log.log(Level.SEVERE, dir.getAbsolutePath() + " is not a directory");
@@ -131,5 +144,7 @@ public class ApidocGeneratorMojo extends AbstractMojo {
             log.log(Level.SEVERE, "write file fail:" + apiDocFileName + ".java", e);
             throw new MojoExecutionException("write file fail:" + apiDocFileName + ".java", e);
         }
+
+        log.info("create file:" + file.getAbsolutePath());
     }
 }

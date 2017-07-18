@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * <p>
  * To change this template use File | Settings | File and Code Templates | Includes .
  */
-@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ApiParam {
