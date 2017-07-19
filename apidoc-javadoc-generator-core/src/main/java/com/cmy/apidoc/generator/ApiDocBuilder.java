@@ -279,7 +279,7 @@ public final class ApiDocBuilder {
         //接口方法名称
         ApiDesc apiDescAntt = method.getAnnotation(ApiDesc.class);
         String reqName = StringUtils.isEmpty(methodRMAntt.name()) ? method.getName() : methodRMAntt.name();
-        String apiName = reqName;
+        String apiName = method.getDeclaringClass().getCanonicalName() + "." + method.getName();
         String apiDesc = reqName;
         if (apiDescAntt != null) {
             if (!apiDescAntt.value().isEmpty()) {

@@ -13,7 +13,7 @@ public class PermissionVo {
 
     private Integer id;
 
-    @ApiParam(size = "..5")
+    @ApiParam(size = "..5", required = false)
     private String code;
 
     private String name;

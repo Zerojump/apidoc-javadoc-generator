@@ -76,7 +76,7 @@ public class SpringMvcAnnotationClass {
 
     @RequestMapping(value = "generic", method = RequestMethod.GET)
     @ApiDesc(value = "好烦", desc = "泛型处理好鬼烦")
-    public A<F, C<E, D>, B> generic() {
+    public A<F, C<E, D>, B> generic(@RequestBody PermissionVo permissionVo) {
         return null;
     }
 }

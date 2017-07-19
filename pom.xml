@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>apidoc-generator-maven-plugin</module>
+        <module>apidoc-javadoc-generator-maven-plugin</module>
         <module>apidoc-javadoc-generator-core</module>
     </modules>
 
