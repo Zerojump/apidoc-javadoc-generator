@@ -2,6 +2,8 @@ package com.cmy.apidoc.generator.material.vo;
 
 import com.cmy.apidoc.generator.annotations.ApiParam;
 
+import java.util.Date;
+
 /**
  * <p>@author chenmingyi
  * <p>@version 1.0
@@ -15,6 +17,8 @@ public class PermissionVo {
 
     @ApiParam(size = "..5", required = false)
     private String code;
+
+    private Date createTime;
 
     private String name;
 

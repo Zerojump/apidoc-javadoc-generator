@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -472,8 +473,7 @@ public final class ApiDocBuilder {
                 ApiParam fieldParamAntt = field.getAnnotation(ApiParam.class);
 
                 //fieldType.isAssignableFrom(String.class) Object类型会判断为true
-                if (ClassUtils.isPrimitiveOrWrapper(fieldType) || fieldType.isAssignableFrom(String.class) || isPrimitiveOrWrapperOrStringArray(fieldType)) {
-
+                if (ClassUtils.isPrimitiveOrWrapper(fieldType) || fieldType.isAssignableFrom(String.class) || Date.class.isAssignableFrom(fieldType) || isPrimitiveOrWrapperOrStringArray(fieldType)) {
                     String group = clazzName;
                     String name = field.getName();
                     String desc = field.getName();
@@ -541,7 +541,8 @@ public final class ApiDocBuilder {
 
             String group = clazz.getSimpleName();
 
-            if (isPrimitiveOrWrapperOrStringArray(clazz)) {
+            //可以不用嵌套去查的类 数组、Date
+            if (isPrimitiveOrWrapperOrStringArray(clazz) || Date.class.isAssignableFrom(clazz)) {
                 objParamSB.append(DOC_START).append(NEW_LINE);
                 StringBuilder paramSB = createApiParam(BRACE_OPEN + JSON_BODY + BRACE_CLOSE + group, apiParamAntt, group, false, attributeName);
                 objParamSB.append(paramSB);

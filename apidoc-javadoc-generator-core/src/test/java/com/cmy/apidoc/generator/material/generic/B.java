@@ -1,5 +1,6 @@
 package com.cmy.apidoc.generator.material.generic;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -14,6 +15,8 @@ public class B {
     private String name;
 
     private Object object;
+
+    private Date modifyTime;
 
     private Integer[][] ints;
 
