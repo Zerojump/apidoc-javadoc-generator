@@ -431,7 +431,7 @@ public final class ApiDocBuilder {
 
                 String group = clazzName;
                 String name = clazzName;
-                String desc = null;
+                String desc = clazzName;
                 if (apiParamAntt != null) {
                     if (!apiParamAntt.group().isEmpty()) {
                         group = apiParamAntt.group();
@@ -476,7 +476,7 @@ public final class ApiDocBuilder {
 
                     String group = clazzName;
                     String name = field.getName();
-                    String desc = null;
+                    String desc = field.getName();
                     if (apiParamAntt != null) {
                         if (!apiParamAntt.group().isEmpty()) {
                             group = apiParamAntt.group();
@@ -486,14 +486,13 @@ public final class ApiDocBuilder {
                                 group = clazzApiParamAntt.name();
                             }
                         }
-
-                        if (fieldParamAntt != null) {
-                            if (!fieldParamAntt.name().isEmpty()) {
-                                name = fieldParamAntt.name();
-                            }
-                            if (!fieldParamAntt.desc().isEmpty()) {
-                                desc = fieldParamAntt.desc();
-                            }
+                    }
+                    if (fieldParamAntt != null) {
+                        if (!fieldParamAntt.name().isEmpty()) {
+                            name = fieldParamAntt.name();
+                        }
+                        if (!fieldParamAntt.desc().isEmpty()) {
+                            desc = fieldParamAntt.desc();
                         }
                     }
 
@@ -520,10 +519,8 @@ public final class ApiDocBuilder {
             successSB.append(COLLECTION);
         }
         successSB.append(BRACE_CLOSE)
-                .append(SPACE_ONE).append(name);
-        if (!StringUtils.isEmpty(desc)) {
-            successSB.append(SPACE_ONE).append(desc);
-        }
+                .append(SPACE_ONE).append(name)
+                .append(SPACE_ONE).append(desc);
         successSB.append(NEW_LINE);
         return successSB;
     }

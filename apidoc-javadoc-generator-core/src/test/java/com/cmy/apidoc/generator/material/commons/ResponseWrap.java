@@ -1,6 +1,7 @@
 package com.cmy.apidoc.generator.material.commons;
 
 import com.cmy.apidoc.generator.annotations.ApiErrorFactoryMethod;
+import com.cmy.apidoc.generator.annotations.ApiParam;
 
 import java.io.Serializable;
 
@@ -13,15 +14,19 @@ public class ResponseWrap<T> implements Serializable {
     /**
      * 状态码
      */
+    @ApiParam(desc = "返回码")
     private int code;
 
     /**
      * 描述信息
      */
+    @ApiParam(desc = "返回信息描述")
     private String desc;
+
     /**
      * 数据域
      */
+    @ApiParam(desc = "具体数据")
     private T data;
 
     @ApiErrorFactoryMethod(value = "parameterError", statusCode = 401, desc = "please check your parameter is right")
