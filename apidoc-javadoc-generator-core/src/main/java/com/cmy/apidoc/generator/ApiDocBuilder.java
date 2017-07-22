@@ -78,6 +78,7 @@ public final class ApiDocBuilder {
     private static final String COLLECTION = BRACKET_OPEN + BRACKET_CLOSE;
 
     private static final Gson GSON;
+
     static {
         GsonBuilder gsonBuilder = new GsonBuilder();
         GSON = gsonBuilder.serializeNulls()
@@ -773,24 +774,26 @@ public final class ApiDocBuilder {
         //需要附属类的泛型实参的属性，获取到对应泛型参数 递归
         //传入泛型参数level，泛型形参
 
-        if (List.class.isAssignableFrom(clazz)) {
-            Map<String, Class<?>> stringClassMap = map.get(level);
-            Class<?> componentClass = stringClassMap.get("E");
-            Object component = createApiSuccessExample(componentClass, map, level + 1);
-            List<Object> list = new LinkedList<>();
-            list.add(component);
-            return list;
-        } else if (Set.class.isAssignableFrom(clazz)) {
+        if (Set.class.isAssignableFrom(clazz)) {
             Map<String, Class<?>> stringClassMap = map.get(level);
             Class<?> componentClass = stringClassMap.get("E");
             Object component = createApiSuccessExample(componentClass, map, level + 1);
             Set<Object> set = new HashSet<>(1);
             set.add(component);
             return set;
-        } else if (Map.class.isAssignableFrom(clazz)) {
-            return Collections.EMPTY_MAP;
-        } else if (clazz.isArray()) {
-            return Collections.EMPTY_LIST;
+        } else if (List.class.isAssignableFrom(clazz) || Collection.class.isAssignableFrom(clazz)) {
+            Map<String, Class<?>> stringClassMap = map.get(level);
+            Class<?> componentClass = stringClassMap.get("E");
+            Object component = createApiSuccessExample(componentClass, map, level + 1);
+            List<Object> list = new LinkedList<>();
+            list.add(component);
+            return list;
+        } else {
+            if (Map.class.isAssignableFrom(clazz)) {
+                return Collections.EMPTY_MAP;
+            } else if (clazz.isArray()) {
+                return Collections.EMPTY_LIST;
+            }
         }
         Object instance = getPrimitiveOrWrapperOrStringDefaultInstance(clazz);
         if (instance != null) {

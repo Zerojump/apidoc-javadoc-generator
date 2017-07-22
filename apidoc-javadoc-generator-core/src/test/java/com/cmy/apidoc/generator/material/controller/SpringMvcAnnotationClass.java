@@ -5,12 +5,12 @@ import com.cmy.apidoc.generator.annotations.ApiErrorDefine;
 import com.cmy.apidoc.generator.annotations.ApiParam;
 import com.cmy.apidoc.generator.material.commons.ResponseWrap;
 import com.cmy.apidoc.generator.material.generic.A;
-import com.cmy.apidoc.generator.material.vo.PermissionVo;
 import com.cmy.apidoc.generator.material.generic.B;
 import com.cmy.apidoc.generator.material.generic.C;
 import com.cmy.apidoc.generator.material.generic.D;
 import com.cmy.apidoc.generator.material.generic.E;
 import com.cmy.apidoc.generator.material.generic.F;
+import com.cmy.apidoc.generator.material.vo.PermissionVo;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInfo;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,7 +76,7 @@ public class SpringMvcAnnotationClass {
 
     @RequestMapping(value = "generic", method = RequestMethod.GET)
     @ApiDesc(value = "好烦", desc = "泛型处理好鬼烦")
-    public A<F, C<E, D>, B> generic(@RequestBody PermissionVo permissionVo) {
+    public A<F, C<E, D>, B> generic(@ApiParam(name = "sss") @RequestBody String sss) {
         return null;
     }
 }

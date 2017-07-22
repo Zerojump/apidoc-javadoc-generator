@@ -122,4 +122,10 @@ public class LoadClassTest {
         File file = new File(dir, fileName);
         writeFile(file, sb.toString(), "UTF-8");
     }
+
+    @Test
+    public void test1() throws Exception {
+        System.out.println(GSON.toJson("adb"));
+
+    }
 }
