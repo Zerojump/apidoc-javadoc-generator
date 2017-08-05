@@ -788,13 +788,12 @@ public final class ApiDocBuilder {
             List<Object> list = new LinkedList<>();
             list.add(component);
             return list;
-        } else {
-            if (Map.class.isAssignableFrom(clazz)) {
-                return Collections.EMPTY_MAP;
-            } else if (clazz.isArray()) {
-                return Collections.EMPTY_LIST;
-            }
+        } else if (Map.class.isAssignableFrom(clazz)) {
+            return Collections.EMPTY_MAP;
+        } else if (clazz.isArray()) {
+            return Collections.EMPTY_LIST;
         }
+
         Object instance = getPrimitiveOrWrapperOrStringDefaultInstance(clazz);
         if (instance != null) {
             return instance;
