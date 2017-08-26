@@ -54,8 +54,6 @@ import java.util.stream.Collectors;
  * <p>date: 2017/7/11
  */
 public final class ApiDocBuilder {
-    private ApiDocBuilder() {
-    }
 
     private static Logger log = Logger.getLogger("ApiDocBuilder");
 
@@ -77,13 +75,24 @@ public final class ApiDocBuilder {
     public static String VERSION = "0.0.1";
     private static final String COLLECTION = BRACKET_OPEN + BRACKET_CLOSE;
 
-    private static final Gson GSON;
+    private Gson gson;
 
-    static {
+    public ApiDocBuilder() {
+    }
+
+    public void init4Gson() {
         GsonBuilder gsonBuilder = new GsonBuilder();
-        GSON = gsonBuilder.serializeNulls()
+        gson = gsonBuilder.serializeNulls()
                 .setPrettyPrinting()
                 .create();
+    }
+
+    public Gson getGson() {
+        return gson;
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
     }
 
     private static final Pattern GENERIC_CODE_PATTERN = Pattern.compile("<[A-Z,<>]+>$");
@@ -123,7 +132,6 @@ public final class ApiDocBuilder {
         return true;
     }
 
-
     public static void writeFile(File file, String content, String fileEncoding) throws IOException {
         FileOutputStream fos = new FileOutputStream(file, false);
         OutputStreamWriter osw;
@@ -138,7 +146,7 @@ public final class ApiDocBuilder {
         bw.close();
     }
 
-    public static StringBuilder createApiDocContentFromClass(Class<?> springMvcClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public StringBuilder createApiDocContentFromClass(Class<?> springMvcClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         //Controller的类@RequestMapping注解
         RequestMapping classRMAntt = springMvcClass.getAnnotation(RequestMapping.class);
 
@@ -178,7 +186,7 @@ public final class ApiDocBuilder {
         return apiDocSB;
     }
 
-    private static List<String> getApiUseCodeList(StringBuilder apiDocSB, ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    private List<String> getApiUseCodeList(StringBuilder apiDocSB, ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         List<String> methodApiUseCodeList = new ArrayList<>();
         if (methodApiErrorDefineAntt != null) {
             StringBuilder apiErrorDefineSB = buildApiErrorDefineBasic(methodApiErrorDefineAntt, prefix);
@@ -192,7 +200,7 @@ public final class ApiDocBuilder {
         return methodApiUseCodeList;
     }
 
-    private static StringBuilder buildApiErrorDefineBasic(ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    private StringBuilder buildApiErrorDefineBasic(ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         StringBuilder apiErrorDefineSB = new StringBuilder();
 
         Class<?> clazz = methodApiErrorDefineAntt.clazz();
@@ -255,14 +263,14 @@ public final class ApiDocBuilder {
                         .append(SPACE_ONE).append(statusCode).append(NEW_LINE);
 
                 Object errorExample = factoryMethod.invoke(instance);
-                apiErrorDefineSB.append(DOC_START).append(GSON.toJson(errorExample)).append(NEW_LINE);
+                apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample)).append(NEW_LINE);
                 apiErrorDefineSB.append(" */").append(NEW_LINE);
             }
         }
         return apiErrorDefineSB;
     }
 
-    private static StringBuilder buildApiDocBasicSingle(String apiGroup, Method method, RequestMapping methodRMAntt, List<String> methodApiUseCodeList) throws InstantiationException, IllegalAccessException {
+    private StringBuilder buildApiDocBasicSingle(String apiGroup, Method method, RequestMapping methodRMAntt, List<String> methodApiUseCodeList) throws InstantiationException, IllegalAccessException {
         //http请求方法，默认是get
         RequestMethod[] reqMethods = methodRMAntt.method();
 
@@ -302,7 +310,7 @@ public final class ApiDocBuilder {
                 .append(SPACE_ONE).append(SLASH).append(apiGroup).append(reqUrl)
                 .append(SPACE_ONE).append(reqName)
                 .append(NEW_LINE);
-        //@apiVersion TODO version 处理
+        //@apiVersion
         apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_VERSION.getCode()).append(SPACE_ONE).append(VERSION).append(NEW_LINE);
         //@apiName
         apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_NAME.getCode()).append(SPACE_ONE).append(apiName).append(NEW_LINE);
@@ -335,7 +343,6 @@ public final class ApiDocBuilder {
             String paramName = p.getName();
             if (body != null) {
                 bodyParameter = p;
-                //TODO parameterType 为集合的情况处理
 
                 Type parameterizedType = p.getParameterizedType();
 
@@ -370,8 +377,8 @@ public final class ApiDocBuilder {
                     .append(SPACE_ONE).append(BRACE_OPEN).append(JSON_BODY).append(BRACE_CLOSE)
                     .append(SPACE_ONE).append("Request-Example:").append(NEW_LINE);
 
-            Object successExample = createApiSuccessExample(bodyParameter.getType(), bodyParameter.getParameterizedType());
-            apiSB.append(DOC_START).append(SPACE_ONE).append(GSON.toJson(successExample)).append(NEW_LINE);
+            Object successExample = createApiExample(bodyParameter.getType(), bodyParameter.getParameterizedType());
+            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample)).append(NEW_LINE);
         }
         //</editor-fold>
 
@@ -381,21 +388,20 @@ public final class ApiDocBuilder {
             //<editor-fold desc="@apiSuccess">
             //接口方法返回类型的泛型嵌套的最后一层的 名称标识
             ApiParam methodApiParamAntt = method.getAnnotation(ApiParam.class);
-            //TODO VOID 处理
             StringBuilder objSuccessParam = createApiSuccessFromNestedObj(genericReturnType, methodApiParamAntt);
             apiSB.append(objSuccessParam);
             //</editor-fold>
 
             //<editor-fold desc="@apiSuccessExample">
             Class<?> returnType = method.getReturnType();
-            Object successExample = createApiSuccessExample(returnType, genericReturnType);
+            Object successExample = createApiExample(returnType, genericReturnType);
 
             apiSB.append(DOC_START).append(NEW_LINE);
             apiSB.append(DOC_LINE_START).append(ApiDocEnum.API_SUCCESS_EXAMPLE.getCode())
                     .append(SPACE_ONE).append(BRACE_OPEN).append(JSON_BODY).append(BRACE_CLOSE)
                     .append(SPACE_ONE).append("Success-Response:").append(NEW_LINE);
             apiSB.append(DOC_START).append(" HTTP 200 OK").append(NEW_LINE);
-            apiSB.append(DOC_START).append(SPACE_ONE).append(GSON.toJson(successExample)).append(NEW_LINE);
+            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample)).append(NEW_LINE);
             //</editor-fold>
         }
 
@@ -411,7 +417,6 @@ public final class ApiDocBuilder {
         return apiSB;
     }
 
-    //TODO 暂时不支持 Map
     private static StringBuilder createApiSuccessFromNestedObj(Type genericReturnType, ApiParam apiParamAntt) {
         StringBuilder objSuccessParam = new StringBuilder();
         createApiSuccessFromNestedObj(genericReturnType, apiParamAntt, objSuccessParam);
@@ -427,7 +432,7 @@ public final class ApiDocBuilder {
 
             String clazzName = clazz.getSimpleName();
 
-            //泛型类型是基本类型的包装类 TODO 测试 String 基本类型数组
+            //泛型类型是基本类型的包装类
             if (ClassUtils.isPrimitiveWrapper(clazz) || clazz.isAssignableFrom(String.class) || isPrimitiveOrWrapperOrStringArray(clazz)) {
                 objSuccessParam.append(DOC_START).append(NEW_LINE);
 
@@ -461,10 +466,6 @@ public final class ApiDocBuilder {
 
             objSuccessParam.append(DOC_START).append(NEW_LINE);
             for (Field field : fieldList) {
-
-                //TODO field 是基本类型及其包装类的情况
-                //TODO 递归 field 也是对象的情况
-                //TODO 递归 field 数组或集合，Map的情况
 
                 if (field.getModifiers() > Modifier.PROTECTED) {
                     continue;
@@ -555,7 +556,7 @@ public final class ApiDocBuilder {
                 continue;
             }
 
-            //泛型类型是基本类型的包装类 TODO 测试 String 基本类型数组
+            //泛型类型是基本类型的包装类
             if (ClassUtils.isPrimitiveWrapper(clazz) || clazz.isAssignableFrom(String.class)) {
                 objParamSB.append(DOC_START).append(NEW_LINE);
                 boolean isArray = i != 0 && i == nestedNum - 1 && Collection.class.isAssignableFrom(classList.get(i - 1));
@@ -571,10 +572,6 @@ public final class ApiDocBuilder {
                 if (field.getModifiers() > Modifier.PROTECTED) {
                     continue;
                 }
-
-                //TODO field 是基本类型及其包装类的情况
-                //TODO 递归 field 也是对象的情况
-                //TODO 递归 field 数组或集合，Map的情况
 
                 Class<?> fieldType = field.getType();
                 String fieldName = field.getName();
@@ -756,13 +753,13 @@ public final class ApiDocBuilder {
         return Collections.EMPTY_MAP;
     }
 
-    private static Object createApiSuccessExample(Class<?> clazz, Type genericType) throws InstantiationException, IllegalAccessException {
+    private static Object createApiExample(Class<?> clazz, Type genericType) throws InstantiationException, IllegalAccessException {
         List<Class<?>> nestedGenericClassList = getTypeListFromNestedGenericType(genericType);
         Map<Integer, Map<String, Class<?>>> nestedGenericTypeMap = getNestedGenericTypeMap(nestedGenericClassList);
-        return createApiSuccessExample(clazz, nestedGenericTypeMap, 0);
+        return createApiExample(clazz, nestedGenericTypeMap, 0);
     }
 
-    private static Object createApiSuccessExample(Class<?> clazz, Map<Integer, Map<String, Class<?>>> map, Integer level) throws IllegalAccessException, InstantiationException {
+    private static Object createApiExample(Class<?> clazz, Map<Integer, Map<String, Class<?>>> map, Integer level) throws IllegalAccessException, InstantiationException {
         //获取方法返回值泛型层数 和 对应类型
 
         //基本类型、其包装类、String（用默认值处理）
@@ -777,14 +774,14 @@ public final class ApiDocBuilder {
         if (Set.class.isAssignableFrom(clazz)) {
             Map<String, Class<?>> stringClassMap = map.get(level);
             Class<?> componentClass = stringClassMap.get("E");
-            Object component = createApiSuccessExample(componentClass, map, level + 1);
+            Object component = createApiExample(componentClass, map, level + 1);
             Set<Object> set = new HashSet<>(1);
             set.add(component);
             return set;
         } else if (List.class.isAssignableFrom(clazz) || Collection.class.isAssignableFrom(clazz)) {
             Map<String, Class<?>> stringClassMap = map.get(level);
             Class<?> componentClass = stringClassMap.get("E");
-            Object component = createApiSuccessExample(componentClass, map, level + 1);
+            Object component = createApiExample(componentClass, map, level + 1);
             List<Object> list = new LinkedList<>();
             list.add(component);
             return list;
@@ -824,9 +821,18 @@ public final class ApiDocBuilder {
                 continue;
             }
 
-            field.setAccessible(true);
+            if (field.get(classInstance) != null) {
+                continue;
+            }
 
             Class<?> fieldType = field.getType();
+
+            if (fieldType.equals(clazz)) {
+                continue;
+            }
+
+            field.setAccessible(true);
+
             if (!fieldType.isArray()) {
                 Object fieldInstance;
                 fieldInstance = getPrimitiveOrWrapperOrStringDefaultInstance(fieldType);
@@ -836,7 +842,7 @@ public final class ApiDocBuilder {
 
                     if (useClazzGeneric && stringClassMap.get(genericTypeName) != null) {
                         Class<?> genericClass = stringClassMap.get(genericTypeName);
-                        fieldInstance = createApiSuccessExample(genericClass, map, level + 1);
+                        fieldInstance = createApiExample(genericClass, map, level + 1);
                     } else {
                         if (useClazzGeneric) {
                             Matcher matcher = GENERIC_CODE_PATTERN.matcher(genericTypeName);
@@ -858,7 +864,7 @@ public final class ApiDocBuilder {
                         List<Class<?>> nestedGenericClassList = getTypeListFromNestedGenericType(genericType);
                         //...另一种递归策略
                         Map<Integer, Map<String, Class<?>>> nestedGenericTypeMap = getNestedGenericTypeMap(nestedGenericClassList);
-                        fieldInstance = createApiSuccessExample(fieldType, nestedGenericTypeMap, 0);
+                        fieldInstance = createApiExample(fieldType, nestedGenericTypeMap, 0);
                     }
                 }
 

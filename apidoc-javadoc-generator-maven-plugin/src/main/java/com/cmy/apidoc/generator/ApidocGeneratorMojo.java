@@ -1,5 +1,7 @@
 package com.cmy.apidoc.generator;
 
+import com.google.gson.Gson;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -10,9 +12,12 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +25,6 @@ import static com.cmy.apidoc.generator.ApiDocBuilder.BRACE_CLOSE;
 import static com.cmy.apidoc.generator.ApiDocBuilder.BRACE_OPEN;
 import static com.cmy.apidoc.generator.ApiDocBuilder.NEW_LINE;
 import static com.cmy.apidoc.generator.ApiDocBuilder.SPACE_ONE;
-import static com.cmy.apidoc.generator.ApiDocBuilder.createApiDocContentFromClass;
 import static com.cmy.apidoc.generator.ApiDocBuilder.writeFile;
 
 
@@ -63,6 +67,15 @@ public class ApidocGeneratorMojo extends AbstractMojo {
     @Parameter(defaultValue = "0.0.1")
     private String apiVersion;
 
+    @Parameter()
+    private String[] extClassPathDirs;
+
+    @Parameter
+    private String gsonFactory;
+
+    @Parameter
+    private String gsonFactoryMethod;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -78,16 +91,40 @@ public class ApidocGeneratorMojo extends AbstractMojo {
             log.info("apiDocDir can't be empty");
             throw new MojoExecutionException("apiDocDir can't be empty");
         }
-        
-        ClassLoader parent = Thread.currentThread().getContextClassLoader();
-        URL[] urls = new URL[1];
-        try {
-            //urls[0] = new URL("file:///"+baseDir+"");
-            File classpathDir = new File(baseDir, classPathDir);
 
-            urls[0] = classpathDir.toURI().toURL();
+        List<URL> urlList = null;
+        if (extClassPathDirs != null) {
+            urlList = new ArrayList<>(extClassPathDirs.length + 1);
+            for (String pathDir : extClassPathDirs) {
+                try {
+                    //URL url = new URL("file:///" + pathDir);
+                    URL url = new File(pathDir).toURI().toURL();
+                    urlList.add(url);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                    log.log(Level.SEVERE, "Can't load class path:" + pathDir);
+                    throw new MojoExecutionException("Load class path fail:" + pathDir, e);
+                }
+            }
+        }
+
+        ClassLoader parent = Thread.currentThread().getContextClassLoader();
+        URL[] urls;
+        try {
+            File classpathDir = new File(baseDir, classPathDir);
+            URL url = classpathDir.toURI().toURL();
+
+            if (urlList != null) {
+                urlList.add(url);
+                urls = urlList.toArray(new URL[urlList.size()]);
+            } else {
+                urls = new URL[]{url};
+            }
+
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            log.log(Level.SEVERE, "Can't load class path:" + classPathDir);
+            throw new MojoExecutionException("Load class path fail:" + classPathDir, e);
         }
         ClassLoader loader = new URLClassLoader(urls, parent);
 
@@ -98,22 +135,47 @@ public class ApidocGeneratorMojo extends AbstractMojo {
         apiDocSB.append("public class ").append(apiDocFileName).append(SPACE_ONE).append(BRACE_OPEN).append(NEW_LINE);
         for (String apiSource : apiSources) {
             Class<?> apiSourceClass;
+            Class<?> gsonFactoryClass = null;
             try {
                 apiSourceClass = loader.loadClass(apiSource);
+                if (!StringUtils.isEmpty(gsonFactory) && !StringUtils.isEmpty(gsonFactoryMethod)) {
+                    gsonFactoryClass = loader.loadClass(gsonFactory);
+                }
+
             } catch (ClassNotFoundException e) {
-                log.log(Level.WARNING, "can't load class " + apiSource + " in " + classPathDir, e);
                 try {
                     apiSourceClass = parent.loadClass(apiSource);
                 } catch (ClassNotFoundException e1) {
                     e1.printStackTrace();
-                    log.log(Level.SEVERE, "can't load class " + apiSource + " in " + classPathDir, e1);
-                    throw new MojoExecutionException("load class fail:" + apiSource, e);
+                    log.log(Level.SEVERE, "can't load class " + apiSource + " or " + gsonFactory + " in " + classPathDir, e1);
+                    throw new MojoExecutionException("load class fail:" + apiSource, e1);
                 }
             }
 
+            Gson gson = null;
+            if (gsonFactoryClass != null) {
+                Method gsonFactoryClassMethod = null;
+                try {
+                    gsonFactoryClassMethod = gsonFactoryClass.getMethod(gsonFactoryMethod);
+                    gson = (Gson) gsonFactoryClassMethod.invoke(gsonFactoryClass.newInstance());
+                } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                    e.printStackTrace();
+                    log.log(Level.SEVERE, "Can't new gson by invoking " + gsonFactory + "." + gsonFactoryMethod);
+                    log.log(Level.SEVERE, "use build-in gson");
+                }
+            }
+
+
             StringBuilder apiDocContent;
+            ApiDocBuilder apiDocBuilder = new ApiDocBuilder();
+            if (gson == null) {
+                apiDocBuilder.init4Gson();
+            } else {
+                apiDocBuilder.setGson(gson);
+            }
+
             try {
-                apiDocContent = createApiDocContentFromClass(apiSourceClass);
+                apiDocContent = apiDocBuilder.createApiDocContentFromClass(apiSourceClass);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 log.log(Level.SEVERE, "can't create apidoc from " + apiSource, e);
@@ -138,7 +200,7 @@ public class ApidocGeneratorMojo extends AbstractMojo {
         File file = new File(dir, apiDocFileName + ".java");
 
         try {
-            writeFile(file,apiDocSB.toString(),"UTF-8");
+            writeFile(file, apiDocSB.toString(), "UTF-8");
         } catch (IOException e) {
             e.printStackTrace();
             log.log(Level.SEVERE, "write file fail:" + apiDocFileName + ".java", e);
