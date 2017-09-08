@@ -821,6 +821,7 @@ public final class ApiDocBuilder {
                 continue;
             }
 
+            field.setAccessible(true);
             if (field.get(classInstance) != null) {
                 continue;
             }

@@ -29,13 +29,6 @@
         <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
     </properties>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>http://172.26.1.122:8080/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-
     <dependencyManagement>
         <dependencies>
 
