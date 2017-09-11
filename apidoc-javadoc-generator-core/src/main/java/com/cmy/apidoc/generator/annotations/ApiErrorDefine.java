@@ -13,11 +13,9 @@ import java.lang.annotation.Target;
  * <p>
  * To change this template use File | Settings | File and Code Templates | Includes .
  */
-@Target({ElementType.METHOD,ElementType.TYPE})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiErrorDefine {
 
-    Class<?> clazz();
-
-    String[] methods();
+    String group() default "";
 }

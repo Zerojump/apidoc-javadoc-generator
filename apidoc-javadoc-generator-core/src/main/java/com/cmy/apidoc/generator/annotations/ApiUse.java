@@ -6,18 +6,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * ${DESCRIPTION}
  * <p>@author chenmingyi
  * <p>@version 1.0
- * <p>date: 2017/7/17
+ * <p>Date: 2017/9/11
+ * <p>
+ * To change this template use File | Settings | File and Code Templates | Includes .
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ApiErrorFactoryMethod {
-    String value() default "";
-
-    int statusCode() default 200;
-
-    String group() default "";
-
-    String desc() default "";
+public @interface ApiUse {
+    String[] value() default {};
 }

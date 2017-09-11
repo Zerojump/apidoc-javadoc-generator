@@ -4,6 +4,7 @@ import com.cmy.apidoc.generator.annotations.ApiDesc;
 import com.cmy.apidoc.generator.annotations.ApiErrorDefine;
 import com.cmy.apidoc.generator.annotations.ApiErrorFactoryMethod;
 import com.cmy.apidoc.generator.annotations.ApiParam;
+import com.cmy.apidoc.generator.annotations.ApiUse;
 import com.cmy.apidoc.generator.enums.ApiDocEnum;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -157,8 +158,14 @@ public final class ApiDocBuilder {
 
         StringBuilder apiDocSB = new StringBuilder();
 
-        ApiErrorDefine classApiErrorDefineAntt = springMvcClass.getAnnotation(ApiErrorDefine.class);
-        List<String> classApiUseCodeList = getApiUseCodeList(apiDocSB, classApiErrorDefineAntt, classSimpleName);
+        ApiUse classApiUseAntt = springMvcClass.getAnnotation(ApiUse.class);
+        List<String> classApiUseCodeList;
+        if (classApiUseAntt == null || classApiUseAntt.value().length == 0) {
+            classApiUseCodeList = new LinkedList<>();
+        } else {
+            classApiUseCodeList = Arrays.asList(classApiUseAntt.value());
+        }
+
 
         //Controller的所有方法
         Method[] methods = springMvcClass.getMethods();
@@ -172,10 +179,15 @@ public final class ApiDocBuilder {
             String methodName = method.getName();
 
             String prefix = classSimpleName + methodName;
-            ApiErrorDefine methodApiErrorDefineAntt = method.getAnnotation(ApiErrorDefine.class);
-            List<String> methodApiUseCodeList = getApiUseCodeList(apiDocSB, methodApiErrorDefineAntt, prefix);
 
-            methodApiUseCodeList.addAll(classApiUseCodeList);
+            ApiUse apiUseAntt = springMvcClass.getAnnotation(ApiUse.class);
+            List<String> methodApiUseCodeList;
+            if (apiUseAntt == null || apiUseAntt.value().length == 0) {
+                methodApiUseCodeList = classApiUseCodeList;
+            } else {
+                methodApiUseCodeList = Arrays.asList(apiUseAntt.value());
+                methodApiUseCodeList.addAll(classApiUseCodeList);
+            }
 
             StringBuilder apiSB = buildApiDocBasicSingle(apiGroup, method, methodRMAntt, methodApiUseCodeList);
             apiDocSB.append(apiSB);
@@ -184,90 +196,6 @@ public final class ApiDocBuilder {
             //apiDocSB.append()
         }
         return apiDocSB;
-    }
-
-    private List<String> getApiUseCodeList(StringBuilder apiDocSB, ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        List<String> methodApiUseCodeList = new ArrayList<>();
-        if (methodApiErrorDefineAntt != null) {
-            StringBuilder apiErrorDefineSB = buildApiErrorDefineBasic(methodApiErrorDefineAntt, prefix);
-            apiDocSB.append(apiErrorDefineSB);
-
-            Class<?> clazz = methodApiErrorDefineAntt.clazz();
-            String simpleName = clazz.getSimpleName();
-            String[] errorFactoryMethodArr = methodApiErrorDefineAntt.methods();
-            methodApiUseCodeList = Arrays.stream(errorFactoryMethodArr).map(s -> simpleName + s + prefix).collect(Collectors.toList());
-        }
-        return methodApiUseCodeList;
-    }
-
-    private StringBuilder buildApiErrorDefineBasic(ApiErrorDefine methodApiErrorDefineAntt, String prefix) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        StringBuilder apiErrorDefineSB = new StringBuilder();
-
-        Class<?> clazz = methodApiErrorDefineAntt.clazz();
-        String clazzSimpleName = clazz.getSimpleName();
-        Object instance = clazz.newInstance();
-
-        String[] errorDefineFactoryMethodArr = methodApiErrorDefineAntt.methods();
-        if (errorDefineFactoryMethodArr.length != 0) {
-            for (String m : errorDefineFactoryMethodArr) {
-                apiErrorDefineSB.append(NEW_LINE);
-
-                Method factoryMethod = clazz.getMethod(m);
-
-                ApiErrorFactoryMethod apiErrorFactoryMethodAntt = factoryMethod.getAnnotation(ApiErrorFactoryMethod.class);
-                String apiErrorCode = m;
-                String errorDesc = null;
-                int statusCode = 200;
-                if (apiErrorFactoryMethodAntt != null) {
-                    if (!apiErrorFactoryMethodAntt.value().isEmpty()) {
-                        apiErrorCode = apiErrorFactoryMethodAntt.value();
-                    }
-
-                    if (!apiErrorFactoryMethodAntt.desc().isEmpty()) {
-                        errorDesc = apiErrorFactoryMethodAntt.desc();
-                    }
-
-                    statusCode = apiErrorFactoryMethodAntt.statusCode();
-                }
-                /*
-                 * @apiDefine MyError
-                 * @apiError UserNotFound The <code>id</code> of the User was not found.
-                 */
-
-                /*
-                 * @api {get} /user/:id
-                 * @apiErrorExample {json} Error-Response:
-                 *     HTTP/1.1 404 Not Found
-                 *     {
-                 *       "error": "UserNotFound"
-                 *     }
-                 */
-                apiErrorDefineSB.append(JAVA_DOC_START).append(NEW_LINE);
-                //@apiDefine
-                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_DEFINE.getCode())
-                        .append(SPACE_ONE).append(clazzSimpleName).append(m).append(prefix).append(NEW_LINE);
-                //@apiError
-                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_ERROR.getCode())
-                        .append(SPACE_ONE).append(apiErrorCode);
-                if (errorDesc != null) {
-                    apiErrorDefineSB.append(SPACE_ONE).append(errorDesc);
-                }
-                apiErrorDefineSB.append(NEW_LINE);
-
-                //@apiErrorExample
-                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_ERROR_EXAMPLE.getCode())
-                        .append(SPACE_ONE).append(BRACE_OPEN).append(JSON_BODY).append(BRACE_CLOSE)
-                        .append(SPACE_ONE).append(apiErrorCode).append(NEW_LINE);
-                apiErrorDefineSB.append(DOC_START)
-                        .append(SPACE_ONE).append("HTTP")
-                        .append(SPACE_ONE).append(statusCode).append(NEW_LINE);
-
-                Object errorExample = factoryMethod.invoke(instance);
-                apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample)).append(NEW_LINE);
-                apiErrorDefineSB.append(" */").append(NEW_LINE);
-            }
-        }
-        return apiErrorDefineSB;
     }
 
     private StringBuilder buildApiDocBasicSingle(String apiGroup, Method method, RequestMapping methodRMAntt, List<String> methodApiUseCodeList) throws InstantiationException, IllegalAccessException {
@@ -899,4 +827,85 @@ public final class ApiDocBuilder {
         return null;
     }
 
+    public StringBuilder buildApiErrorDefineBasic(Class<?> factoryClass) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        List<String> list = new LinkedList<>();
+
+        Method[] methodArr = factoryClass.getMethods();
+
+        ApiErrorDefine apiErrorDefineAntt = factoryClass.getAnnotation(ApiErrorDefine.class);
+        String group;
+        if (apiErrorDefineAntt == null || StringUtils.isEmpty(apiErrorDefineAntt.group())) {
+            group = factoryClass.getSimpleName();
+        } else {
+            group = apiErrorDefineAntt.group();
+        }
+
+        StringBuilder apiErrorDefineSB = new StringBuilder();
+
+        Object instance = factoryClass.newInstance();
+
+        for (Method method : methodArr) {
+            ApiErrorFactoryMethod factoryMethodAntt = method.getAnnotation(ApiErrorFactoryMethod.class);
+            if (factoryMethodAntt != null) {
+                apiErrorDefineSB.append(NEW_LINE);
+
+                String methodName = method.getName();
+                String apiErrorCode = methodName;
+                String errorDesc = null;
+
+                if (!factoryMethodAntt.value().isEmpty()) {
+                    apiErrorCode = factoryMethodAntt.value();
+                }
+
+                if (!factoryMethodAntt.desc().isEmpty()) {
+                    errorDesc = factoryMethodAntt.desc();
+                }
+
+                int statusCode = factoryMethodAntt.statusCode();
+
+                Class<?> returnType = method.getReturnType();
+                /*
+                 * @apiDefine MyError
+                 * @apiError UserNotFound The <code>id</code> of the User was not found.
+                 */
+
+                /*
+                 * @api {get} /user/:id
+                 * @apiErrorExample {json} Error-Response:
+                 *     HTTP/1.1 404 Not Found
+                 *     {
+                 *       "error": "UserNotFound"
+                 *     }
+                 */
+                apiErrorDefineSB.append(JAVA_DOC_START).append(NEW_LINE);
+                //@apiDefine
+                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_DEFINE.getCode())
+                        .append(SPACE_ONE).append(PAREN_OPEN).append(group).append(PAREN_CLOSE)
+                        .append(SPACE_ONE).append(BRACE_OPEN).append(returnType.getSimpleName()).append(BRACE_CLOSE)
+                        .append(SPACE_ONE).append(methodName).append(NEW_LINE);
+                //@apiError
+                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_ERROR.getCode())
+                        .append(SPACE_ONE).append(apiErrorCode);
+                if (errorDesc != null) {
+                    apiErrorDefineSB.append(SPACE_ONE).append(errorDesc);
+                }
+                apiErrorDefineSB.append(NEW_LINE);
+
+                //@apiErrorExample
+                apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_ERROR_EXAMPLE.getCode())
+                        .append(SPACE_ONE).append(BRACE_OPEN).append(JSON_BODY).append(BRACE_CLOSE)
+                        .append(SPACE_ONE).append(apiErrorCode).append(NEW_LINE);
+                apiErrorDefineSB.append(DOC_START)
+                        .append(SPACE_ONE).append("HTTP")
+                        .append(SPACE_ONE).append(statusCode).append(NEW_LINE);
+
+                Object errorExample = method.invoke(instance);
+                apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample)).append(NEW_LINE);
+                apiErrorDefineSB.append(" */").append(NEW_LINE);
+
+                list.add(methodName);
+            }
+        }
+        return apiErrorDefineSB;
+    }
 }
