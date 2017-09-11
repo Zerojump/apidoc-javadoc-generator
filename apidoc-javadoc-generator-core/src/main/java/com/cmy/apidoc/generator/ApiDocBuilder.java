@@ -154,8 +154,6 @@ public final class ApiDocBuilder {
         //Controller的类@RequestMapping注解的value 值作为apiGroup
         String apiGroup = classRMAntt.value().length == 0 ? "" : classRMAntt.value()[0];
 
-        String classSimpleName = springMvcClass.getSimpleName();
-
         StringBuilder apiDocSB = new StringBuilder();
 
         ApiUse classApiUseAntt = springMvcClass.getAnnotation(ApiUse.class);
@@ -175,10 +173,6 @@ public final class ApiDocBuilder {
             if (methodRMAntt == null) {
                 continue;
             }
-
-            String methodName = method.getName();
-
-            String prefix = classSimpleName + methodName;
 
             ApiUse apiUseAntt = springMvcClass.getAnnotation(ApiUse.class);
             List<String> methodApiUseCodeList;
