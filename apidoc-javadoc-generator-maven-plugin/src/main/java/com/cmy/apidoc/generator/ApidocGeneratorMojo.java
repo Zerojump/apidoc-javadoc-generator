@@ -144,6 +144,7 @@ public class ApidocGeneratorMojo extends AbstractMojo {
             Method gsonFactoryClassMethod;
             try {
                 gsonFactoryClassMethod = gsonFactoryClass.getMethod(gsonFactoryMethod);
+                gsonFactoryClassMethod.setAccessible(true);
                 gson = (Gson) gsonFactoryClassMethod.invoke(gsonFactoryClass.newInstance());
             } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 e.printStackTrace();
