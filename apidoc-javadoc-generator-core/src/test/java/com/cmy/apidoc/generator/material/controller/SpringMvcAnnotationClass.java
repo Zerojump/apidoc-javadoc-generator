@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("brand")
-@ApiErrorDefine(clazz = ResponseWrap.class, methods = {"getParamError", "getAccountError"})
 public class SpringMvcAnnotationClass {
 
     @RequestMapping(name = "不知道做什么啊", value = "read/{id}", method = RequestMethod.GET)
@@ -44,7 +43,6 @@ public class SpringMvcAnnotationClass {
     }
 
     @RequestMapping(value = "create", method = RequestMethod.POST)
-    @ApiErrorDefine(clazz = ResponseWrap.class, methods = {"getPasswordError"})
     public ResponseWrap<List<PermissionVo>> post(@RequestBody @ApiParam(desc = "权限id数组") List<Integer> permissionIdList) {
         List<PermissionVo> collect = permissionIdList.stream().map(i -> {
             PermissionVo permissionVo = new PermissionVo();

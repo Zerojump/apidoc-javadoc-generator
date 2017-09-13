@@ -75,6 +75,7 @@ public final class ApiDocBuilder {
     private static final String JSON_BODY = "json";
     public static String VERSION = "0.0.1";
     private static final String COLLECTION = BRACKET_OPEN + BRACKET_CLOSE;
+    private static final String ERROR_RESP_GROUP = "Error-Response";
 
     private Gson gson;
 
@@ -174,7 +175,7 @@ public final class ApiDocBuilder {
                 continue;
             }
 
-            ApiUse apiUseAntt = springMvcClass.getAnnotation(ApiUse.class);
+            ApiUse apiUseAntt = method.getAnnotation(ApiUse.class);
             List<String> methodApiUseCodeList;
             if (apiUseAntt == null || apiUseAntt.value().length == 0) {
                 methodApiUseCodeList = classApiUseCodeList;
@@ -822,14 +823,13 @@ public final class ApiDocBuilder {
     }
 
     public StringBuilder buildApiErrorDefineBasic(Class<?> factoryClass) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-        List<String> list = new LinkedList<>();
 
         Method[] methodArr = factoryClass.getMethods();
 
         ApiErrorDefine apiErrorDefineAntt = factoryClass.getAnnotation(ApiErrorDefine.class);
         String group;
         if (apiErrorDefineAntt == null || StringUtils.isEmpty(apiErrorDefineAntt.group())) {
-            group = factoryClass.getSimpleName();
+            group = ERROR_RESP_GROUP;
         } else {
             group = apiErrorDefineAntt.group();
         }
@@ -857,6 +857,11 @@ public final class ApiDocBuilder {
 
                 int statusCode = factoryMethodAntt.statusCode();
 
+                String methodGroup = group;
+                if (!StringUtils.isEmpty(factoryMethodAntt.group())) {
+                    methodGroup = factoryMethodAntt.group();
+                }
+
                 Class<?> returnType = method.getReturnType();
                 /*
                  * @apiDefine MyError
@@ -874,11 +879,11 @@ public final class ApiDocBuilder {
                 apiErrorDefineSB.append(JAVA_DOC_START).append(NEW_LINE);
                 //@apiDefine
                 apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_DEFINE.getCode())
-                        .append(SPACE_ONE).append(PAREN_OPEN).append(group).append(PAREN_CLOSE)
-                        .append(SPACE_ONE).append(BRACE_OPEN).append(returnType.getSimpleName()).append(BRACE_CLOSE)
                         .append(SPACE_ONE).append(methodName).append(NEW_LINE);
                 //@apiError
                 apiErrorDefineSB.append(DOC_LINE_START).append(ApiDocEnum.API_ERROR.getCode())
+                        .append(SPACE_ONE).append(PAREN_OPEN).append(methodGroup).append(PAREN_CLOSE)
+                        .append(SPACE_ONE).append(BRACE_OPEN).append(returnType.getSimpleName()).append(BRACE_CLOSE)
                         .append(SPACE_ONE).append(apiErrorCode);
                 if (errorDesc != null) {
                     apiErrorDefineSB.append(SPACE_ONE).append(errorDesc);
@@ -893,11 +898,10 @@ public final class ApiDocBuilder {
                         .append(SPACE_ONE).append("HTTP")
                         .append(SPACE_ONE).append(statusCode).append(NEW_LINE);
 
-                Object errorExample = method.invoke(instance);
+                Parameter[] parameters = method.getParameters();
+                Object errorExample = method.invoke(instance, new Object[parameters.length]);
                 apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample)).append(NEW_LINE);
                 apiErrorDefineSB.append(" */").append(NEW_LINE);
-
-                list.add(methodName);
             }
         }
         return apiErrorDefineSB;

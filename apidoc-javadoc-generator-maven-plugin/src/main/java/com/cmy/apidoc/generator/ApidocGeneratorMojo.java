@@ -130,7 +130,7 @@ public class ApidocGeneratorMojo extends AbstractMojo {
             throw new MojoExecutionException("Load class path fail:" + classPathDir, e);
         }
 
-        log.log(Level.SEVERE, "use classpath:" + Arrays.toString(urls));
+        log.info("use classpath:" + Arrays.toString(urls));
         ClassLoader loader = new URLClassLoader(urls, parent);
 
         ApiDocBuilder.VERSION = apiVersion;
@@ -194,7 +194,7 @@ public class ApidocGeneratorMojo extends AbstractMojo {
 
         StringBuilder apiDocSB = new StringBuilder();
         apiDocSB.append(PACKAGE).append(SPACE_ONE).append(apiDocPackage).append(SEMICOLON).append(NEW_LINE).append(NEW_LINE);
-        apiDocSB.append("public class ").append(apiDocFileName).append(SPACE_ONE).append(BRACE_OPEN).append(NEW_LINE).append(NEW_LINE);
+        apiDocSB.append("public class ").append(apiDocFileName).append(SPACE_ONE).append(BRACE_OPEN).append(NEW_LINE);
 
         apiDocSB.append(apiErrorContent);
         apiDocSB.append(apiDocContents);
@@ -240,5 +240,101 @@ public class ApidocGeneratorMojo extends AbstractMojo {
             }
         }
         return apiSourceClass;
+    }
+
+    public File getBaseDir() {
+        return baseDir;
+    }
+
+    public void setBaseDir(File baseDir) {
+        this.baseDir = baseDir;
+    }
+
+    public File getSourceDirectory() {
+        return sourceDirectory;
+    }
+
+    public void setSourceDirectory(File sourceDirectory) {
+        this.sourceDirectory = sourceDirectory;
+    }
+
+    public String getClassPathDir() {
+        return classPathDir;
+    }
+
+    public void setClassPathDir(String classPathDir) {
+        this.classPathDir = classPathDir;
+    }
+
+    public String getApiDocFileName() {
+        return apiDocFileName;
+    }
+
+    public void setApiDocFileName(String apiDocFileName) {
+        this.apiDocFileName = apiDocFileName;
+    }
+
+    public String getApiDocDir() {
+        return apiDocDir;
+    }
+
+    public void setApiDocDir(String apiDocDir) {
+        this.apiDocDir = apiDocDir;
+    }
+
+    public String getApiDocPackage() {
+        return apiDocPackage;
+    }
+
+    public void setApiDocPackage(String apiDocPackage) {
+        this.apiDocPackage = apiDocPackage;
+    }
+
+    public String[] getApiSources() {
+        return apiSources;
+    }
+
+    public void setApiSources(String[] apiSources) {
+        this.apiSources = apiSources;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public String[] getExtClassPathDirs() {
+        return extClassPathDirs;
+    }
+
+    public void setExtClassPathDirs(String[] extClassPathDirs) {
+        this.extClassPathDirs = extClassPathDirs;
+    }
+
+    public String[] getApiErrors() {
+        return apiErrors;
+    }
+
+    public void setApiErrors(String[] apiErrors) {
+        this.apiErrors = apiErrors;
+    }
+
+    public String getGsonFactory() {
+        return gsonFactory;
+    }
+
+    public void setGsonFactory(String gsonFactory) {
+        this.gsonFactory = gsonFactory;
+    }
+
+    public String getGsonFactoryMethod() {
+        return gsonFactoryMethod;
+    }
+
+    public void setGsonFactoryMethod(String gsonFactoryMethod) {
+        this.gsonFactoryMethod = gsonFactoryMethod;
     }
 }
