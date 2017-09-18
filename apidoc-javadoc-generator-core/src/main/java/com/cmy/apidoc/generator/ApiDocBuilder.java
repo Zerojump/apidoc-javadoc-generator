@@ -395,6 +395,11 @@ public final class ApiDocBuilder {
                     continue;
                 }
 
+                ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
+                if (apiIgnoreAntt != null) {
+                    continue;
+                }
+
                 Class<?> fieldType = field.getType();
                 ApiParam fieldParamAntt = field.getAnnotation(ApiParam.class);
 
