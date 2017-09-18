@@ -3,6 +3,7 @@ package com.cmy.apidoc.generator;
 import com.cmy.apidoc.generator.annotations.ApiDesc;
 import com.cmy.apidoc.generator.annotations.ApiErrorDefine;
 import com.cmy.apidoc.generator.annotations.ApiErrorFactoryMethod;
+import com.cmy.apidoc.generator.annotations.ApiIgnore;
 import com.cmy.apidoc.generator.annotations.ApiParam;
 import com.cmy.apidoc.generator.annotations.ApiUse;
 import com.cmy.apidoc.generator.enums.ApiDocEnum;
@@ -496,6 +497,11 @@ public final class ApiDocBuilder {
                     continue;
                 }
 
+                ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
+                if (apiIgnoreAntt != null) {
+                    continue;
+                }
+
                 Class<?> fieldType = field.getType();
                 String fieldName = field.getName();
                 ApiParam fieldParamAntt = field.getAnnotation(ApiParam.class);
@@ -741,6 +747,11 @@ public final class ApiDocBuilder {
         }
         for (Field field : fieldList) {
             if (field.getModifiers() > Modifier.PROTECTED) {
+                continue;
+            }
+
+            ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
+            if (apiIgnoreAntt != null) {
                 continue;
             }
 
