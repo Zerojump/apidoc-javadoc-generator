@@ -15,6 +15,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.multipart.MultipartFile;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.io.BufferedWriter;
@@ -60,10 +61,10 @@ public final class ApiDocBuilder {
     private static Logger log = Logger.getLogger("ApiDocBuilder");
 
     private static final String JAVA_DOC_START = "/**";
-    public static final String SPACE_ONE = " ";
-    public static final String NEW_LINE = "\n";
-    public static final String BRACE_OPEN = "{";
-    public static final String BRACE_CLOSE = "}";
+    static final String SPACE_ONE = " ";
+    static final String NEW_LINE = "\n";
+    static final String BRACE_OPEN = "{";
+    static final String BRACE_CLOSE = "}";
     private static final String BRACKET_OPEN = "[";
     private static final String BRACKET_CLOSE = "]";
     private static final String PAREN_OPEN = "(";
@@ -74,16 +75,16 @@ public final class ApiDocBuilder {
     private static final String EMPTY = "";
     private static final String EQUAL = "=";
     private static final String JSON_BODY = "json";
-    public static String VERSION = "0.0.1";
+    static String VERSION = "0.0.1";
     private static final String COLLECTION = BRACKET_OPEN + BRACKET_CLOSE;
     private static final String ERROR_RESP_GROUP = "Error-Response";
 
     private Gson gson;
 
-    public ApiDocBuilder() {
+    ApiDocBuilder() {
     }
 
-    public void init4Gson() {
+    void init4Gson() {
         GsonBuilder gsonBuilder = new GsonBuilder();
         gson = gsonBuilder.serializeNulls()
                 .setPrettyPrinting()
@@ -94,7 +95,7 @@ public final class ApiDocBuilder {
         return gson;
     }
 
-    public void setGson(Gson gson) {
+    void setGson(Gson gson) {
         this.gson = gson;
     }
 
@@ -135,7 +136,7 @@ public final class ApiDocBuilder {
         return true;
     }
 
-    public static void writeFile(File file, String content, String fileEncoding) throws IOException {
+    static void writeFile(File file, String content, String fileEncoding) throws IOException {
         FileOutputStream fos = new FileOutputStream(file, false);
         OutputStreamWriter osw;
         if (fileEncoding == null) {
@@ -149,7 +150,7 @@ public final class ApiDocBuilder {
         bw.close();
     }
 
-    public StringBuilder createApiDocContentFromClass(Class<?> springMvcClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    StringBuilder createApiDocContentFromClass(Class<?> springMvcClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         //Controller的类@RequestMapping注解
         RequestMapping classRMAntt = springMvcClass.getAnnotation(RequestMapping.class);
 
@@ -396,7 +397,7 @@ public final class ApiDocBuilder {
                 }
 
                 ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
-                if (apiIgnoreAntt != null) {
+                if (apiIgnoreAntt != null && !apiIgnoreAntt.inApisuccess()) {
                     continue;
                 }
 
@@ -404,7 +405,7 @@ public final class ApiDocBuilder {
                 ApiParam fieldParamAntt = field.getAnnotation(ApiParam.class);
 
                 //fieldType.isAssignableFrom(String.class) Object类型会判断为true
-                if (ClassUtils.isPrimitiveOrWrapper(fieldType) || fieldType.isAssignableFrom(String.class) || Date.class.isAssignableFrom(fieldType) || isPrimitiveOrWrapperOrStringArray(fieldType)) {
+                if (isNotNestApiSuccessType(fieldType)) {
                     String group = clazzName;
                     String name = field.getName();
                     String desc = field.getName();
@@ -473,7 +474,7 @@ public final class ApiDocBuilder {
             String group = clazz.getSimpleName();
 
             //可以不用嵌套去查的类 数组、Date
-            if (isPrimitiveOrWrapperOrStringArray(clazz) || Date.class.isAssignableFrom(clazz)) {
+            if (isNotNestApiParamType(clazz)) {
                 objParamSB.append(DOC_START).append(NEW_LINE);
                 StringBuilder paramSB = createApiParam(BRACE_OPEN + JSON_BODY + BRACE_CLOSE + group, apiParamAntt, group, false, attributeName);
                 objParamSB.append(paramSB);
@@ -503,7 +504,7 @@ public final class ApiDocBuilder {
                 }
 
                 ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
-                if (apiIgnoreAntt != null) {
+                if (apiIgnoreAntt != null && !apiIgnoreAntt.inApiParam()) {
                     continue;
                 }
 
@@ -623,6 +624,9 @@ public final class ApiDocBuilder {
         }
     }
 
+    /**
+     * 是否是基本类型、基本类型包装类、String 的数组
+     */
     private static boolean isPrimitiveOrWrapperOrStringArray(Class<?> clazz) {
         for (Class<?> c = clazz; c.isArray(); ) {
             Class<?> componentType = c.getComponentType();
@@ -755,10 +759,10 @@ public final class ApiDocBuilder {
                 continue;
             }
 
-            ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
-            if (apiIgnoreAntt != null) {
-                continue;
-            }
+            //ApiIgnore apiIgnoreAntt = field.getAnnotation(ApiIgnore.class);
+            //if (apiIgnoreAntt != null) {
+            //    continue;
+            //}
 
             field.setAccessible(true);
             if (field.get(classInstance) != null) {
@@ -838,7 +842,7 @@ public final class ApiDocBuilder {
         return null;
     }
 
-    public StringBuilder buildApiErrorDefineBasic(Class<?> factoryClass) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    StringBuilder buildApiErrorDefineBasic(Class<?> factoryClass) throws IllegalAccessException, InstantiationException, InvocationTargetException {
 
         Method[] methodArr = factoryClass.getMethods();
 
@@ -920,6 +924,26 @@ public final class ApiDocBuilder {
                 apiErrorDefineSB.append(" */").append(NEW_LINE);
             }
         }
-        return apiErrorDefineSB;
+      return apiErrorDefineSB;
+    }
+
+    /**
+     * ApiParam可以不用嵌套去查的类 数组、Date
+     */
+    private static boolean isNotNestApiParamType(Class<?> clazz) {
+        return isPrimitiveOrWrapperOrStringArray(clazz)
+                || Date.class.isAssignableFrom(clazz)
+                || MultipartFile.class.isAssignableFrom(clazz)
+                ;
+    }
+
+    /**
+     * ApiSuccess可以不用嵌套去查的类 数组、Date
+     */
+    private static boolean isNotNestApiSuccessType(Class<?> clazz) {
+        return ClassUtils.isPrimitiveOrWrapper(clazz)
+                || clazz.isAssignableFrom(String.class)
+                || isNotNestApiParamType(clazz)
+                ;
     }
 }

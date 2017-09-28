@@ -13,4 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiIgnore {
+    boolean inApiParam() default false;
+
+    boolean inApisuccess() default false;
 }
