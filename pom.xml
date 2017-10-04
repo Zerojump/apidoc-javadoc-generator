@@ -6,7 +6,7 @@
 
     <groupId>com.cmy</groupId>
     <artifactId>apidoc-javadoc-generator</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -24,7 +24,7 @@
         <spring.version>4.3.5.RELEASE</spring.version>
         <apache-commons-lang3.version>3.6</apache-commons-lang3.version>
         <github-pagehelper.version>4.1.3</github-pagehelper.version>
-        <apidoc-javadoc-generator-core.version>0.0.1-SNAPSHOT</apidoc-javadoc-generator-core.version>
+        <apidoc-javadoc-generator-core.version>0.0.1</apidoc-javadoc-generator-core.version>
         <maven-plugin-plugin.version>3.5</maven-plugin-plugin.version>
         <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
     </properties>
