@@ -297,13 +297,10 @@ public class ApiDoc {
  * @apiParam ({json}Node) {Long} id 节点id
  * @apiParam ({json}Node) {String} name 节点名称
  *
- * @apiParam ({json}Date) {Date} date 节点名称
- *
  * @apiParamExample {json} Request-Example:
  * {
   "id": 0,
-  "name": "",
-  "date": 1507129247822
+  "name": ""
 }
  *
  * @apiSuccess (Integer) {Integer[]} Integer Integer
