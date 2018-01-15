@@ -791,7 +791,7 @@ public final class ApiDocBuilder {
                         if (useClazzGeneric) {
                             Matcher matcher = GENERIC_CODE_PATTERN.matcher(genericTypeName);
                             if (matcher.find()) {
-                                //TODO 没有做泛型层次的兼容，有损健壮性
+                                // 没有做泛型层次的兼容，有损健壮性
                                 String group = matcher.group();
                                 if (group.indexOf("<") != group.lastIndexOf("<")) {
                                     throw new IllegalArgumentException("暂时不支持域泛型嵌套 " + clazz.getName() + "." + genericTypeName);

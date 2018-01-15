@@ -6,7 +6,7 @@
 使用apidoc时生成文档时需要 3 步（默认使用者已经安装了node.js、apidoc，如果没有可以根据这个来完成：[node.js](https://nodejs.org/en/)，v6版本的node.js安装后会把npm也装好， [apidoc install](http://apidocjs.com/#install) ）
 1.  完成api的注释文档；
 2.  完成[apidoc.json](http://apidocjs.com/#configuration)（这一步可省略）；
-3.  使用命令```apidoc -i doc_dir -o output_dir ``` [run](http://apidocjs.com/#run)，在哪个目录下执行这个命令，[apidoc.json](http://apidocjs.com/#configuration)放在哪个目录就行，就可生成漂亮美观的api文档了。
+3.  使用命令 [apidoc -i doc_dir -o output_dir](http://apidocjs.com/#run)，在哪个目录下执行这个命令，[apidoc.json](http://apidocjs.com/#configuration)放在哪个目录就行，就可生成漂亮美观的api文档了。
 
     
 　　这个项目就是实现的就是可以根据java的注解和maven插件配置来生成apidoc注释的maven插件，即完成上面的第一步，也是最烦人的一步，
