@@ -303,7 +303,7 @@ public final class ApiDocBuilder {
                     .append(SPACE_ONE).append("Request-Example:").append(NEW_LINE);
 
             Object successExample = createApiExample(bodyParameter.getType(), bodyParameter.getParameterizedType());
-            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample)).append(NEW_LINE);
+            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample).replaceAll("\n", "\n * ")).append(NEW_LINE);
         }
         //</editor-fold>
 
@@ -326,7 +326,7 @@ public final class ApiDocBuilder {
                     .append(SPACE_ONE).append(BRACE_OPEN).append(JSON_BODY).append(BRACE_CLOSE)
                     .append(SPACE_ONE).append("Success-Response:").append(NEW_LINE);
             apiSB.append(DOC_START).append(" HTTP 200 OK").append(NEW_LINE);
-            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample)).append(NEW_LINE);
+            apiSB.append(DOC_START).append(SPACE_ONE).append(gson.toJson(successExample).replaceAll("\n", "\n * ")).append(NEW_LINE);
             //</editor-fold>
         }
 
@@ -920,7 +920,7 @@ public final class ApiDocBuilder {
 
                 Parameter[] parameters = method.getParameters();
                 Object errorExample = method.invoke(instance, new Object[parameters.length]);
-                apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample)).append(NEW_LINE);
+                apiErrorDefineSB.append(DOC_START).append(gson.toJson(errorExample).replaceAll("\n", "\n * ")).append(NEW_LINE);
                 apiErrorDefineSB.append(" */").append(NEW_LINE);
             }
         }
